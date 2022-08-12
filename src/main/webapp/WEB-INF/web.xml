@@ -39,12 +39,19 @@
     </param-value>
   </context-param>
 
+  <!-- Spring MVC Configuration -->
+  <!-- Front Controller (dispatcher servlet) Configuration -->
   <servlet>
     <servlet-name>dispatcher</servlet-name>
     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>/WEB-INF/dispatcher-servlet.xml</param-value>
+    </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
 
+  <!-- Servlet will catch every http request with *.do-->
   <servlet-mapping>
     <servlet-name>dispatcher</servlet-name>
     <url-pattern>*.do</url-pattern>
