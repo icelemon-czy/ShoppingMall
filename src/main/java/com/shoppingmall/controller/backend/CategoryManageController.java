@@ -7,7 +7,7 @@ import com.shoppingmall.pojo.Category;
 import com.shoppingmall.pojo.User;
 import com.shoppingmall.service.ICategoryService;
 import com.shoppingmall.service.IUserService;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 import net.sf.jsqlparser.schema.Server;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;

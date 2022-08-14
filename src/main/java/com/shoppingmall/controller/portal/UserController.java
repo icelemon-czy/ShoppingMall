@@ -5,7 +5,7 @@ import com.shoppingmall.common.ResponseCode;
 import com.shoppingmall.common.ServerResponse;
 import com.shoppingmall.pojo.User;
 import com.shoppingmall.service.IUserService;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
