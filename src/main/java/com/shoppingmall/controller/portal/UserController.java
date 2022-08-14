@@ -31,7 +31,7 @@ public class UserController {
         return login_response;
     }
 
-    @RequestMapping(value = "logout.do",method = RequestMethod.GET)
+    @RequestMapping(value = "logout.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> logout(HttpSession session){
         session.removeAttribute(Const.Current_User);
@@ -44,7 +44,7 @@ public class UserController {
          return iUserService.register(user);
     }
 
-    @RequestMapping(value = "checkValid.do",method = RequestMethod.GET)
+    @RequestMapping(value = "checkValid.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> checkValid(String str, String type){
          return iUserService.checkValid(str,type);
@@ -61,25 +61,25 @@ public class UserController {
         }
     }
 
-    @RequestMapping(value = "getQuestion.do",method = RequestMethod.GET)
+    @RequestMapping(value = "getQuestion.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> getQuestion(String username){
         return iUserService.getQuestion(username);
     }
 
-    @RequestMapping(value = "checkAnswer.do",method = RequestMethod.GET)
+    @RequestMapping(value = "checkAnswer.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> checkAnswer(String username,String question,String answer){
         return iUserService.checkAnswer(username,question,answer);
     }
 
-    @RequestMapping(value = "forgetResetPassword.do",method = RequestMethod.GET)
+    @RequestMapping(value = "forgetResetPassword.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> forgetResetPassword(String username,String newPassword,String token){
         return iUserService.forgetResetPassword(username, newPassword, token);
     }
 
-    @RequestMapping(value = "loginResetPassword.do",method = RequestMethod.GET)
+    @RequestMapping(value = "loginResetPassword.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<String> loginResetPassword(String oldPassword,String newPassword,HttpSession session){
         User user = (User) session.getAttribute(Const.Current_User);
@@ -89,7 +89,7 @@ public class UserController {
         return iUserService.loginResetPassword(oldPassword,newPassword,user);
     }
 
-    @RequestMapping(value = "updateUserInfo.do",method = RequestMethod.GET)
+    @RequestMapping(value = "updateUserInfo.do",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<User> updateUserInfo(HttpSession session,User user){
         User currentUser = (User) session.getAttribute(Const.Current_User);
