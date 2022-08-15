@@ -119,6 +119,6 @@
   <select id="selectCategoryChildrenByParentId" parameterType="int" resultMap="BaseResultMap">
     select <include refid="Base_Column_List"></include>
     from ProductCategory
-    where  parentId = #{parentId}
+    where  parent_id = #{parentId}
   </select>
 </mapper>

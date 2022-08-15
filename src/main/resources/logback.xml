@@ -11,9 +11,9 @@
     </appender>
 
     <appender name="shoppingmall" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>/developer/apache-tomcat-7.0.73/logs/shoppingmall.log</File>
+        <File> src/Log/shoppingmall.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/developer/apache-tomcat-7.0.73/logs/shoppingmall.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <fileNamePattern> src/Log/shoppingmall.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
             <append>true</append>
             <maxHistory>10</maxHistory> <!-- save up tp 10 days -->
         </rollingPolicy>
@@ -24,9 +24,9 @@
 
 
     <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>/developer/apache-tomcat-7.0.73/logs/error.log</File>
+        <File> src/Log/error.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/devsoft/apache-tomcat-7.0.73/logs/error.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <fileNamePattern>src/Log/error.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
             <append>true</append>
             <maxHistory>10</maxHistory>
         </rollingPolicy>

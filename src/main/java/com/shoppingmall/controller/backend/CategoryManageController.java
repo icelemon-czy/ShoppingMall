@@ -57,6 +57,7 @@ public class CategoryManageController {
             return ServerResponse.createByErrorMessage("Unauthorized Operation!");
         }
     }
+
     @RequestMapping(value = "getCategory.do")
     @ResponseBody
     public ServerResponse getChildrenCategory(HttpSession session,@RequestParam(value = "id",defaultValue = "0") Integer id){
@@ -72,6 +73,8 @@ public class CategoryManageController {
         }
     }
 
+    @RequestMapping(value = "getAllDescendantCategory.do")
+    @ResponseBody
     public ServerResponse getAllDescendantCategory(HttpSession session,@RequestParam(value = "id",defaultValue = "0") Integer parentId){
         User user = (User) session.getAttribute(Const.Current_User);
         if(user == null){
