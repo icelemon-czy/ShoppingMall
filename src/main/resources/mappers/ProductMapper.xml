@@ -182,4 +182,18 @@
     from Product
     ORDER BY id asc
   </select>
+
+  <select id="selectProductByNameAndId" resultMap="BaseResultMap" parameterType="map">
+    select
+    <include refid="Base_Column_List"/>
+    from Product
+    <where>
+    <if test="name != null">
+      name like #{name}
+    </if>
+    <if test = "id != null">
+      and id = #{id}
+    </if>
+    </where>
+  </select>
 </mapper>

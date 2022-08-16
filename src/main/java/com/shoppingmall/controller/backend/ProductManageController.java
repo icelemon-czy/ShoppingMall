@@ -73,7 +73,7 @@ public class ProductManageController {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "User does not log in!");
         }
         if(iUserService.checkAdminRole(user).isSuccess()){
-            //return iProductService.
+            return iProductService.searchProduct(productName,productId,pageNum,pageSize);
         }else{
             return ServerResponse.createByErrorMessage("Unauthorized Operation!");
         }
