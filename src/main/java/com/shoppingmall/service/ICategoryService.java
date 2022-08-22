@@ -9,5 +9,5 @@ public interface ICategoryService {
     ServerResponse<String> addCategory(String categoryName, Integer parentId);
     ServerResponse<String> setCategory(String newCategoryName,Integer id);
     ServerResponse<List<Category>> getChildrenCategory(Integer parentId);
-    ServerResponse getAllDescendantCategory(Integer parentId);
+    ServerResponse<List<Integer>> getAllDescendantCategory(Integer parentId);
 }

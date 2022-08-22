@@ -62,7 +62,7 @@ public class CategoryServiceImplement implements ICategoryService {
         return ServerResponse.createBySuccess(categoryList);
     }
     @Override
-    public ServerResponse getAllDescendantCategory(Integer parentId){
+    public ServerResponse<List<Integer>> getAllDescendantCategory(Integer parentId){
         Set<Category> categorySet = Sets.newHashSet();
         findChildCategory(categorySet,parentId);
         List<Integer> categoryIdList = Lists.newArrayList();
