@@ -1,6 +1,9 @@
 package com.shoppingmall.dao;
 
 import com.shoppingmall.pojo.ShoppingCart;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 public interface ShoppingCartMapper {
     int deleteByPrimaryKey(Integer id);
@@ -14,4 +17,12 @@ public interface ShoppingCartMapper {
     int updateByPrimaryKeySelective(ShoppingCart record);
 
     int updateByPrimaryKey(ShoppingCart record);
+
+    ShoppingCart selectCartByUserIdProductId(@Param("userId") Integer userId,@Param("productId") Integer productId);
+
+    List<ShoppingCart> selectCartByUserId(Integer userId);
+
+    int selectCartProductCheckedStatusByUserId(Integer userId);
+
+
 }

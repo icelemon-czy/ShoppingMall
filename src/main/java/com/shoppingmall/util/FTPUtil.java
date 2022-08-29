@@ -27,16 +27,18 @@ public class FTPUtil {
     public static boolean uploadFile(List<File> fileList) throws IOException {
         FTPUtil ftpUtil = new FTPUtil(ftpIp,21,ftpUser,ftpPassword);
         logger.info("Start to connect to FTP Server");
-        boolean result = ftpUtil.uploadFile("img",fileList);
+        boolean result = ftpUtil.uploadFile("/ftpfile/img/",fileList);
         logger.info("Stop connection");
         return result;
     }
+
     // Remote Path: file path under ftp server
     private boolean uploadFile(String remotePath,List<File> fileList) throws IOException{
         boolean upload = true;
         FileInputStream fis = null;
         // Connect to FTP Server
         if(connectServer(getIp(),getPort(),getUser(),getPassword())){
+            logger.info("Connect to ftp server successfully!");
             try {
                 ftpClient.changeWorkingDirectory(remotePath);
                 ftpClient.setBufferSize(1024);
@@ -64,7 +66,7 @@ public class FTPUtil {
         boolean isSuccess = false;
         ftpClient = new FTPClient();
         try {
-            ftpClient.connect(ip);
+            ftpClient.connect(ip,port);
             isSuccess = ftpClient.login(user,password);
         }catch (IOException e){
             logger.error("Connect Server Error ",e);
