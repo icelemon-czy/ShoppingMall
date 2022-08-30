@@ -40,14 +40,24 @@ public class CartController {
         return iCartService.updateProduct(user.getId(),productId,count);
     }
 
-    @RequestMapping("delete.do")
+    @RequestMapping("delete_Products.do")
     @ResponseBody
-    public ServerResponse<CartVo> deleteProduct(HttpSession session, String productIds){
+    public ServerResponse<CartVo> deleteProducts(HttpSession session, String productIds){
         User user = (User) session.getAttribute(Const.Current_User);
         if(user == null){
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
         }
-        return iCartService;
+        return iCartService.deleteProducts(user.getId(),productIds);
+    }
+
+    @RequestMapping("list.do")
+    @ResponseBody
+    public ServerResponse<CartVo> listCart(HttpSession session){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iCartService.listCart(user.getId());
     }
 
 

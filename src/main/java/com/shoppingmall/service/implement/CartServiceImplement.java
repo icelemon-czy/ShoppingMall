@@ -68,6 +68,17 @@ public class CartServiceImplement implements ICartService {
 
     public ServerResponse<CartVo> deleteProducts(Integer userId,String productIds){
         List<String> productList = Splitter.on(",").splitToList(productIds);
+        if(CollectionUtils.isEmpty(productList)){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
+        }
+        shoppingCartMapper.deleteByUserIdProductIds(userId,productList);
+        CartVo cartVo = getCartVoLimit(userId);
+        return ServerResponse.createBySuccess(cartVo);
+    }
+
+    public ServerResponse<CartVo> listCart(Integer userId){
+        CartVo cartVo = getCartVoLimit(userId);
+        return ServerResponse.createBySuccess(cartVo);
     }
 
     private CartVo getCartVoLimit(Integer userId){

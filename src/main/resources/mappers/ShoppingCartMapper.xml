@@ -135,4 +135,16 @@
     where user_id = #{userId} And checked = 0
   </select>
 
+  <delete id="deleteByUserIdProductIds" parameterType = "map" >
+    delete
+    from ShoppingCart
+    where user_id = #{userId}
+    <if test="productIdList != null" >
+        and product_id in
+        <foreach collection="productIdList" item = "item" index="index" open="(" separator="," close=",">
+            #{item}
+        </foreach>
+    </if>
+  </delete>
+
 </mapper>
