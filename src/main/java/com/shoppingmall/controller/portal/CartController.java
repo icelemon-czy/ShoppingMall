@@ -6,7 +6,6 @@ import com.shoppingmall.common.ServerResponse;
 import com.shoppingmall.pojo.User;
 import com.shoppingmall.service.ICartService;
 import com.shoppingmall.vo.CartVo;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,5 +59,54 @@ public class CartController {
         return iCartService.listCart(user.getId());
     }
 
+    @RequestMapping("selectAll.do")
+    @ResponseBody
+    public ServerResponse<CartVo> selectAll(HttpSession session){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iCartService.selectOrUnselect(user.getId(),null,Const.ShoppingCart.Checked);
+    }
+
+    @RequestMapping("unSelectAll.do")
+    @ResponseBody
+    public ServerResponse<CartVo> unSelectAll(HttpSession session){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iCartService.selectOrUnselect(user.getId(),null,Const.ShoppingCart.UnChecked);
+    }
+
+    @RequestMapping("SelectProduct.do")
+    @ResponseBody
+    public ServerResponse<CartVo> SelectProduct(HttpSession session,Integer productId){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iCartService.selectOrUnselect(user.getId(),productId,Const.ShoppingCart.Checked);
+    }
+
+    @RequestMapping("unSelectProduct.do")
+    @ResponseBody
+    public ServerResponse<CartVo> unSelectProduct(HttpSession session,Integer productId){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(),ResponseCode.NEED_LOGIN.getDesc());
+        }
+        return iCartService.selectOrUnselect(user.getId(),productId,Const.ShoppingCart.UnChecked);
+    }
+
+    @RequestMapping("getCartProductCount.do")
+    @ResponseBody
+    public ServerResponse<Integer> getCartProductCount(HttpSession session){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createBySuccess(0);
+        }
+        return iCartService.getCartProductCount(user.getId());
+    }
 
 }

@@ -49,8 +49,7 @@ public class CartServiceImplement implements ICartService {
             // Update product quantity in shopping cart
             shoppingCartMapper.updateByPrimaryKeySelective(cart);
         }
-        CartVo cartVo = getCartVoLimit(userId);
-        return ServerResponse.createBySuccess(cartVo);
+        return listCart(userId);
     }
 
     public ServerResponse<CartVo> updateProduct(Integer userId, Integer productId, Integer count){
@@ -62,8 +61,7 @@ public class CartServiceImplement implements ICartService {
             cart.setQuantity(count);
             shoppingCartMapper.updateByPrimaryKeySelective(cart);
         }
-        CartVo cartVo = getCartVoLimit(userId);
-        return ServerResponse.createBySuccess(cartVo);
+        return listCart(userId);
     }
 
     public ServerResponse<CartVo> deleteProducts(Integer userId,String productIds){
@@ -72,14 +70,27 @@ public class CartServiceImplement implements ICartService {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
         shoppingCartMapper.deleteByUserIdProductIds(userId,productList);
-        CartVo cartVo = getCartVoLimit(userId);
-        return ServerResponse.createBySuccess(cartVo);
+        return listCart(userId);
     }
 
     public ServerResponse<CartVo> listCart(Integer userId){
         CartVo cartVo = getCartVoLimit(userId);
         return ServerResponse.createBySuccess(cartVo);
     }
+
+    public ServerResponse<CartVo> selectOrUnselect(Integer userId,Integer productId,Integer checked){
+        shoppingCartMapper.checkedOrUncheckedProduct(userId,productId,checked);
+        return listCart(userId);
+    }
+
+    public ServerResponse<Integer> getCartProductCount(Integer userId){
+        if(userId == null){
+            return ServerResponse.createBySuccess(0);
+        }
+        return ServerResponse.createBySuccess(shoppingCartMapper.selectCartProductCount(userId));
+    }
+
+
 
     private CartVo getCartVoLimit(Integer userId){
         CartVo cartVo = new CartVo();

@@ -147,4 +147,21 @@
     </if>
   </delete>
 
+
+ <update id="checkedOrUncheckedProduct" parameterType="map">
+   update ShoppingCart
+   set checked = #{checked}
+    update_time = now()
+   where user_id = #{userId}
+   <if test="productId != null">
+       AND product_id = #{productId}
+   </if>
+ </update>
+
+  <select id="selectCartProductCount" parameterType="int" resultType = "int">
+    select IFNULL (sum(quantity),0) as Count
+    from ShoppingCart
+    where user_id = #{userId}
+  </select>
+
 </mapper>
