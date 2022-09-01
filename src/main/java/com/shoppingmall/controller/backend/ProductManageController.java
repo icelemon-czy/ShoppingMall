@@ -35,15 +35,31 @@ public class ProductManageController {
     @Autowired
     private IFileService iFileService;
 
-    @RequestMapping(value = "addProduct.do")
+    // if product id is null then its add product action
+    // otherwise it's update product action.
+    @RequestMapping(value = "addOrupdateProduct.do")
     @ResponseBody
-    public ServerResponse  addProduct(HttpSession session, Product product){
+    public ServerResponse  addOrupdateProduct(HttpSession session, Product product){
         User user = (User) session.getAttribute(Const.Current_User);
         if(user == null) {
             return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "User does not log in!");
         }
         if(iUserService.checkAdminRole(user).isSuccess()){
             return iProductService.addOrUpdateProduct(product);
+        }else{
+            return ServerResponse.createByErrorMessage("Unauthorized Operation!");
+        }
+    }
+
+    @RequestMapping(value = "setSaleStatus.do")
+    @ResponseBody
+    public ServerResponse  setSaleStatus(HttpSession session,Integer productId, Integer status){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null) {
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), "User does not log in!");
+        }
+        if(iUserService.checkAdminRole(user).isSuccess()){
+            return iProductService.setSaleStatus(productId,status);
         }else{
             return ServerResponse.createByErrorMessage("Unauthorized Operation!");
         }

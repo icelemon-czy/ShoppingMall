@@ -8,8 +8,8 @@ springmvc Upload File
     <input type="submit" value="springmvc Upload File" />
 </form>
 
-springmvc Upload File
-<form name="form2" action="/manage/product/richtext_img_upload" method="post" enctype="multipart/form-data">
+Richtext Img Upload
+<form name="form2" action="/manage/product/richtext_img_upload.do" method="post" enctype="multipart/form-data">
     <input type="file" name="richtext_img_upload" />
     <input type="submit" value="Rich text img upload!" />
 </form>

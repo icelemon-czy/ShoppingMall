@@ -12,7 +12,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="ShoppingMall" options="-extdirs /Users/chansteven/Desktop/Project/ShoppingMall/src/main/webapp/WEB-INF/lib" />
+      <module name="ShoppingMall" options="-extdirs $PROJECT_DIR$/src/main/webapp/WEB-INF/lib" />
     </option>
   </component>
 </project>
