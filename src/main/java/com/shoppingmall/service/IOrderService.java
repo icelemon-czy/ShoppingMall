@@ -28,4 +28,6 @@ public interface IOrderService {
     ServerResponse<OrderVo> manageDetail(Long orderNo);
 
     ServerResponse<PageInfo> manageSearch(int pageNum,int pageSize,Long orderNo);
+
+    ServerResponse<String> manageShipGoods(Long orderNo);
 }

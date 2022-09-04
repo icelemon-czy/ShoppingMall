@@ -38,10 +38,7 @@ import org.springframework.util.CollectionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Service("iOrderService")
 public class OrderServiceImplement implements IOrderService {
@@ -520,5 +517,19 @@ public class OrderServiceImplement implements IOrderService {
         PageInfo pageInfo = new PageInfo(Lists.newArrayList(order));
         pageInfo.setList(Lists.newArrayList(orderVo));
         return ServerResponse.createBySuccess(pageInfo);
+    }
+
+    public ServerResponse<String> manageShipGoods(Long orderNo){
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("Does not have such order!");
+        }
+        if(order.getStatus() == Const.OrderStatusEnum.PAID.getCode()){
+            order.setStatus(Const.OrderStatusEnum.SHIPPED.getCode());
+            order.setSendTime(new Date());
+            orderMapper.updateByPrimaryKeySelective(order);
+            return ServerResponse.createBySuccessMessage("Shipping Success!");
+        }
+        return ServerResponse.createByErrorMessage("Order has already Shipped!");
     }
 }

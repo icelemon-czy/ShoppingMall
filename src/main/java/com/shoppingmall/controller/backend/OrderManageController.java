@@ -70,4 +70,17 @@ public class OrderManageController {
         }
     }
 
+    @RequestMapping("shipGoods")
+    @ResponseBody
+    public ServerResponse<String> shippingGoods(HttpSession session, Long orderNo){
+        User user = (User) session.getAttribute(Const.Current_User);
+        if(user == null){
+            return ServerResponse.createByErrorCodeMessage(ResponseCode.NEED_LOGIN.getCode(), ResponseCode.NEED_LOGIN.getDesc());
+        }
+        if(iUserService.checkAdminRole(user).isSuccess()){
+            return iOrderService.manageShipGoods(orderNo);
+        }else{
+            return ServerResponse.createByErrorMessage("Unauthorized Operation!");
+        }
+    }
 }
