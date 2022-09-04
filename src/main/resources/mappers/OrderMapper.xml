@@ -210,4 +210,11 @@
     from Orders
     where order_no = #{orderNo}
   </select>
+
+  <select id="selectByUserId" parameterType="int" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from Orders
+    where user_id= #{userId}
+    order by create_time
+  </select>
 </mapper>

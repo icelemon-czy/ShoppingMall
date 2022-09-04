@@ -11,6 +11,8 @@ import com.alipay.demo.trade.model.result.AlipayF2FPrecreateResult;
 import com.alipay.demo.trade.service.AlipayTradeService;
 import com.alipay.demo.trade.service.impl.AlipayTradeServiceImpl;
 import com.alipay.demo.trade.utils.ZxingUtils;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.shoppingmall.common.Const;
@@ -23,6 +25,7 @@ import com.shoppingmall.util.DateTimeUtil;
 import com.shoppingmall.util.FTPUtil;
 import com.shoppingmall.util.PropertiesUtil;
 import com.shoppingmall.vo.ItemVo;
+import com.shoppingmall.vo.OrderProductVo;
 import com.shoppingmall.vo.OrderVo;
 import com.shoppingmall.vo.ShippingVo;
 import org.apache.commons.lang.StringUtils;
@@ -56,7 +59,7 @@ public class OrderServiceImplement implements IOrderService {
 
     @Autowired
     private ShippingMapper shippingMapper;
-
+    // --------------- Create Order --------------
     public ServerResponse createOrder(Integer userId,Integer shippingId){
         List<ShoppingCart> cartList = shoppingCartMapper.selectCheckedCartByUserId(userId);
         ServerResponse serverResponse = getCartOrderItem(userId,cartList);
@@ -231,6 +234,86 @@ public class OrderServiceImplement implements IOrderService {
         }
         return ServerResponse.createBySuccess(itemList);
     }
+
+    // ----------------Cancel Order-----------------
+    public ServerResponse<String> cancel(Long orderNo,Integer userId){
+        Order order = orderMapper.selectByUserIdOrderNo(userId,orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("User does not have this order!");
+        }
+        if(order.getStatus() != Const.OrderStatusEnum.NO_PAY.getCode()){
+            return ServerResponse.createByErrorMessage("User has paid and cannot cancel the order!");
+        }
+        Order updateOrder = new Order();
+        updateOrder.setId(order.getId());
+        updateOrder.setStatus(Const.OrderStatusEnum.CANCELED.getCode());
+        // TODO: product stock !!!!!!!
+        int rowCount = orderMapper.updateByPrimaryKeySelective(updateOrder);
+        if(rowCount>0){
+            return ServerResponse.createBySuccess();
+        }
+        return ServerResponse.createByError();
+
+
+    }
+
+    public ServerResponse getOrderCartProduct(Integer userId){
+        OrderProductVo orderProductVo = new OrderProductVo();
+        List<ShoppingCart> shoppingCartList = shoppingCartMapper.selectCheckedCartByUserId(userId);
+        ServerResponse serverResponse = getCartOrderItem(userId,shoppingCartList);
+        if(!serverResponse.isSuccess()){
+            return serverResponse;
+        }
+        List<Item> orderItemList = (List<Item>) serverResponse.getData();
+        List<ItemVo> orderItemVoList = Lists.newArrayList();
+        for(Item orderItem : orderItemList){
+            orderItemVoList.add(assembleItemVo(orderItem));
+        }
+        BigDecimal payment = getOrderTotalPrice(orderItemList);
+        orderProductVo.setOrderItemVoList(orderItemVoList);
+        orderProductVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
+        orderProductVo.setProductTotalPrice(payment);
+        return ServerResponse.createBySuccess(orderProductVo);
+    }
+
+    // --------------Order Detail ----------------
+    public ServerResponse<OrderVo> getOrderDetail(Integer userId,Long orderNo){
+        Order order = orderMapper.selectByUserIdOrderNo(userId,orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("User does not have such order!");
+        }
+        List<Item> orderItemList = itemMapper.selectByOrderNoUserId(orderNo, userId);
+        OrderVo orderVo = assembleOrderVo(order,orderItemList);
+        return ServerResponse.createBySuccess(orderVo);
+    }
+
+    public ServerResponse<PageInfo> getOrderList(Integer userId,int pageNum,int pageSize){
+        PageHelper.startPage(pageNum, pageSize);
+        List<Order> orderList = orderMapper.selectByUserId(userId);
+        // Convert Order to Order Vo
+        List<OrderVo> orderVoList = assembleOrderVoList(orderList,userId);
+        PageInfo pageInfo = new PageInfo(orderList);
+        pageInfo.setList(orderVoList);
+        return ServerResponse.createBySuccess(pageInfo);
+    }
+
+    private List<OrderVo> assembleOrderVoList(List<Order> orderList,Integer userId){
+        List<OrderVo> orderVoList = Lists.newArrayList();
+        for(Order order : orderList){
+            List<Item> orderItemList;
+                // Admin query, Do not need the userId
+            if(userId == null){
+                orderItemList = null;
+            }else{
+                // User
+                orderItemList = itemMapper.selectByOrderNoUserId(order.getOrderNo(),userId);
+            }
+            OrderVo orderVo = assembleOrderVo(order,orderItemList);
+            orderVoList.add(orderVo);
+        }
+        return orderVoList;
+    }
+
 
 
     // --------------------------AliPay Related methods pay and callback------------------
