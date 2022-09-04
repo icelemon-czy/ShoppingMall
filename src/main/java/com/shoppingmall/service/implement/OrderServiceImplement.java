@@ -15,28 +15,30 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.shoppingmall.common.Const;
 import com.shoppingmall.common.ServerResponse;
-import com.shoppingmall.dao.ItemMapper;
-import com.shoppingmall.dao.OrderMapper;
-import com.shoppingmall.dao.PayInfoMapper;
-import com.shoppingmall.pojo.Item;
-import com.shoppingmall.pojo.Order;
-import com.shoppingmall.pojo.PayInfo;
+import com.shoppingmall.dao.*;
+import com.shoppingmall.pojo.*;
 import com.shoppingmall.service.IOrderService;
 import com.shoppingmall.util.BigDecimalUtil;
 import com.shoppingmall.util.DateTimeUtil;
 import com.shoppingmall.util.FTPUtil;
 import com.shoppingmall.util.PropertiesUtil;
+import com.shoppingmall.vo.ItemVo;
+import com.shoppingmall.vo.OrderVo;
+import com.shoppingmall.vo.ShippingVo;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 @Service("iOrderService")
 public class OrderServiceImplement implements IOrderService {
@@ -45,10 +47,193 @@ public class OrderServiceImplement implements IOrderService {
     private OrderMapper orderMapper;
     @Autowired
     private ItemMapper itemMapper;
-
+    @Autowired
+    private ProductMapper productMapper;
+    @Autowired
+    private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private PayInfoMapper payInfoMapper;
 
+    @Autowired
+    private ShippingMapper shippingMapper;
+
+    public ServerResponse createOrder(Integer userId,Integer shippingId){
+        List<ShoppingCart> cartList = shoppingCartMapper.selectCheckedCartByUserId(userId);
+        ServerResponse serverResponse = getCartOrderItem(userId,cartList);
+        if(!serverResponse.isSuccess()){
+            return serverResponse;
+        }
+        List<Item> orderItemList = (List<Item>) serverResponse.getData();
+        if(CollectionUtils.isEmpty(orderItemList)){
+            return ServerResponse.createByErrorMessage("Shopping Cart is empty!");
+        }
+        BigDecimal payment = getOrderTotalPrice(orderItemList);
+        Order order = assembleOrder(userId,shippingId,payment);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("Create order fail!");
+        }
+        for(Item item : orderItemList){
+            item.setOrderNo(order.getOrderNo());
+        }
+        // MyBatis batch insert
+        itemMapper.batchInsert(orderItemList);
+
+        // Reduce Product Stock
+        reduceProductStock(orderItemList);
+
+        // Clean checked shopping cart item.
+        cleanShoppingCart(cartList);
+
+        // Return VO to the front
+        OrderVo orderVo = assembleOrderVo(order,orderItemList);
+
+        return ServerResponse.createBySuccess(orderVo);
+    }
+
+    private void reduceProductStock(List<Item> orderItemList){
+        for(Item item : orderItemList){
+            Product product = productMapper.selectByPrimaryKey(item.getProductId());
+            Product update = new Product();
+            update.setId(product.getId());
+            update.setStock(product.getStock() - item.getQuantity());
+            productMapper.updateByPrimaryKeySelective(update);
+        }
+    }
+
+    private void cleanShoppingCart(List<ShoppingCart> cartList){
+        for(ShoppingCart shoppingCart:cartList){
+            shoppingCartMapper.deleteByPrimaryKey(shoppingCart.getId());
+        }
+    }
+
+    private Order assembleOrder(Integer userId,Integer shippingId,BigDecimal payment){
+        Order order = new Order();
+        // Generate Order number
+        Long orderNo = generateOrderNo();
+        order.setOrderNo(orderNo);
+        order.setUserId(userId);
+        order.setPayment(payment);
+        order.setShippingId(shippingId);
+        order.setStatus(Const.OrderStatusEnum.NO_PAY.getCode());
+        order.setPostage(0);
+        order.setPaymentType(Const.PaymentTypeEnum.ONLINE_PAY.getCode());
+        int rowCount = orderMapper.insert(order);
+        if(rowCount == 0){
+            return null; // Create fail;
+        }
+        return order;
+    }
+
+    private OrderVo assembleOrderVo(Order order,List<Item> orderItemList){
+        // Order Part
+        OrderVo orderVo = new OrderVo();
+        orderVo.setOrderNo(order.getOrderNo());
+        orderVo.setPayment(order.getPayment());
+        orderVo.setPaymentType(order.getPaymentType());
+        orderVo.setPaymentTypeDesc(Const.PaymentTypeEnum.find(order.getPaymentType()).getValue());
+        orderVo.setPostage(order.getPostage());
+        orderVo.setStatus(order.getStatus());
+        orderVo.setStatusDesc(Const.OrderStatusEnum.find(order.getStatus()).getValue());
+        orderVo.setPaymentTime(DateTimeUtil.dateToStr(order.getPaymentTime()));
+        orderVo.setSendTime(DateTimeUtil.dateToStr(order.getSendTime()));
+        orderVo.setEndTime(DateTimeUtil.dateToStr(order.getEndTime()));
+        orderVo.setCloseTime(DateTimeUtil.dateToStr(order.getCloseTime()));
+        orderVo.setCreateTime(DateTimeUtil.dateToStr(order.getCreateTime()));
+
+        // Shipping Part
+        orderVo.setShippingId(order.getShippingId());
+        Shipping shipping = shippingMapper.selectByPrimaryKey(order.getShippingId());
+        if(shipping != null){
+            orderVo.setReceiverName(shipping.getReceiverName());
+            orderVo.setShippingVo(assembleShippingVo(shipping));
+        }
+
+        // Image Host Part
+        orderVo.setImageHost(PropertiesUtil.getProperty("ftp.server.http.prefix"));
+
+        // Order Item Part
+        List<ItemVo> orderItemVoList = Lists.newArrayList();
+        for(Item item : orderItemList){
+            orderItemVoList.add(assembleItemVo(item));
+        }
+        orderVo.setOrderItemVoList(orderItemVoList);
+
+        return orderVo;
+    }
+
+    private ShippingVo assembleShippingVo(Shipping shipping){
+        ShippingVo shippingVo = new ShippingVo();
+        shippingVo.setReceiverName(shipping.getReceiverName());
+        shippingVo.setReceiverAddress(shipping.getReceiverAddress());
+        shippingVo.setReceiverProvince(shipping.getReceiverProvince());
+        shippingVo.setReceiverCity(shipping.getReceiverCity());
+        shippingVo.setReceiverDistrict(shipping.getReceiverDistrict());
+        shippingVo.setReceiverMobile(shipping.getReceiverMobile());
+        shippingVo.setReceiverZip(shipping.getReceiverZip());
+        shippingVo.setReceiverPhone(shippingVo.getReceiverPhone());
+        return shippingVo;
+    }
+
+    private ItemVo assembleItemVo(Item item){
+        ItemVo orderItemVo = new ItemVo();
+        orderItemVo.setOrderNo(item.getOrderNo());
+        orderItemVo.setProductId(item.getProductId());
+        orderItemVo.setProductName(item.getProductName());
+        orderItemVo.setProductImage(item.getProductImage());
+        orderItemVo.setCurrentUnitPrice(item.getCurrentUnitPrice());
+        orderItemVo.setQuantity(item.getQuantity());
+        orderItemVo.setTotalPrice(item.getTotalPrice());
+        orderItemVo.setCreateTime(DateTimeUtil.dateToStr(item.getCreateTime()));
+        return orderItemVo;
+    }
+
+    private long generateOrderNo(){
+        // Generate order number based on timestamp.
+        long currentTime = System.currentTimeMillis();
+        return currentTime+ new Random().nextInt(1000);
+    }
+
+    private BigDecimal getOrderTotalPrice(List<Item> orderItemList){
+        BigDecimal payment = new BigDecimal("0");
+        for(Item item : orderItemList){
+            payment = BigDecimalUtil.add(payment.doubleValue(),item.getTotalPrice().doubleValue());
+        }
+        return payment;
+    }
+
+    private ServerResponse<List<Item>> getCartOrderItem(Integer userId,List<ShoppingCart> cartList){
+        List<Item> itemList = Lists.newArrayList();
+        if(CollectionUtils.isEmpty(cartList)){
+            return ServerResponse.createByErrorMessage("Shopping Cart is empty!");
+        }
+        // Validate Shopping Cart data, make sure product is on sale
+        // and product quantity is below or equal to stock
+        for(ShoppingCart cart : cartList){
+            Item item = new Item();
+            Product product = productMapper.selectByPrimaryKey(cart.getProductId());
+            // Validation process
+            if(Const.ProductStatusEnum.ON_SALE.getCode() != product.getStatus()){
+                return ServerResponse.createByErrorMessage("Product"+product.getName()+" is not on sale!");
+            }
+            if(cart.getQuantity() > product.getStock()){
+                return ServerResponse.createByErrorMessage("Product"+product.getName()+"Insufficient stock!");
+            }
+            // Fill in item
+            item.setUserId(userId);
+            item.setProductId(product.getId());
+            item.setProductName(product.getName());
+            item.setProductImage(product.getMainImage());
+            item.setCurrentUnitPrice(product.getPrice());
+            item.setQuantity(cart.getQuantity());
+            item.setTotalPrice(BigDecimalUtil.mul(cart.getQuantity(), product.getPrice().doubleValue()));
+
+            itemList.add(item);
+        }
+        return ServerResponse.createBySuccess(itemList);
+    }
+
+
+    // --------------------------AliPay Related methods pay and callback------------------
     public ServerResponse pay(Integer userId,Long orderNo,String path){
         Map<String,String> resultMap = Maps.newHashMap();
         Order order = orderMapper.selectByUserIdOrderNo(userId, orderNo);

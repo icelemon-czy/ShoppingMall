@@ -25,4 +25,13 @@ public class BigDecimalTest {
         BigDecimal b2 = new BigDecimal("0.01");
         System.out.println(b1.add(b2));
     }
+
+    @Test
+    public void test4(){
+        BigDecimal b1 = new BigDecimal("5");
+        BigDecimal b2 = new BigDecimal("10");
+        System.out.println(b1.add(b2));
+        System.out.println(b1);
+        System.out.println(b2);
+    }
 }
