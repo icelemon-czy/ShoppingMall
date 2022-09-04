@@ -303,7 +303,7 @@ public class OrderServiceImplement implements IOrderService {
             List<Item> orderItemList;
                 // Admin query, Do not need the userId
             if(userId == null){
-                orderItemList = null;
+                orderItemList = itemMapper.selectByOrderNo(order.getOrderNo());
             }else{
                 // User
                 orderItemList = itemMapper.selectByOrderNoUserId(order.getOrderNo(),userId);
@@ -486,5 +486,39 @@ public class OrderServiceImplement implements IOrderService {
         }else{
             return ServerResponse.createByError();
         }
+    }
+
+    // ----------------------------BackEnd Manage-----------------------------
+    public ServerResponse<PageInfo> manageGetOrderList(int pageNum,int pageSize){
+        PageHelper.startPage(pageNum, pageSize);
+        List<Order> orderList =  orderMapper.selectAllOrder();
+        // Convert Order to Order Vo
+        List<OrderVo> orderVoList = assembleOrderVoList(orderList,null);
+        PageInfo pageInfo = new PageInfo(orderList);
+        pageInfo.setList(orderVoList);
+        return ServerResponse.createBySuccess(pageInfo);
+    }
+
+    public ServerResponse<OrderVo> manageDetail(Long orderNo){
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("Does not have such order!");
+        }
+        List<Item> orderItemList = itemMapper.selectByOrderNo(orderNo);
+        OrderVo orderVo = assembleOrderVo(order,orderItemList);
+        return ServerResponse.createBySuccess(orderVo);
+    }
+
+    public ServerResponse<PageInfo> manageSearch(int pageNum,int pageSize,Long orderNo){
+        PageHelper.startPage(pageNum, pageSize);
+        Order order = orderMapper.selectByOrderNo(orderNo);
+        if(order == null){
+            return ServerResponse.createByErrorMessage("Does not have such order!");
+        }
+        List<Item> orderItemList = itemMapper.selectByOrderNo(orderNo);
+        OrderVo orderVo = assembleOrderVo(order,orderItemList);
+        PageInfo pageInfo = new PageInfo(Lists.newArrayList(order));
+        pageInfo.setList(Lists.newArrayList(orderVo));
+        return ServerResponse.createBySuccess(pageInfo);
     }
 }

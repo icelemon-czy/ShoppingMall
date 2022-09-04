@@ -22,4 +22,10 @@ public interface IOrderService {
     ServerResponse<OrderVo> getOrderDetail(Integer userId, Long orderNo);
 
     ServerResponse<PageInfo> getOrderList(Integer userId, int pageNum, int pageSize);
+
+    ServerResponse<PageInfo> manageGetOrderList(int pageNum,int pageSize);
+
+    ServerResponse<OrderVo> manageDetail(Long orderNo);
+
+    ServerResponse<PageInfo> manageSearch(int pageNum,int pageSize,Long orderNo);
 }
